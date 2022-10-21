@@ -1,4 +1,4 @@
-Demonstrates how to use PowerVS to sets up a RHEL PVM with Terraform and configure FIPS
+Demonstrates how to install Quay in a Power Virtual Instance on PowerVS
 
 # Steps to Initialize with Terraform and PowerVS
 

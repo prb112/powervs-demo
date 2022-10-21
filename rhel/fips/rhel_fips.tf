@@ -339,6 +339,6 @@ resource "ibm_pi_instance_action" "fips_bastion_reboot" {
   count = 1
 
   pi_cloud_instance_id = var.service_instance_id
-  pi_instance_id     = ibm_pi_instance.bastion[count.index].id
-  pi_action         = "soft-reboot"
+  pi_instance_id       = ibm_pi_instance.bastion[count.index].id
+  pi_action            = "soft-reboot"
 }
