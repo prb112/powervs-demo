@@ -12,4 +12,3 @@ No. This is only a proof-of-concept that serves as a good starting point to unde
 
 ## Contributing
 Please see the [contributing doc](CONTRIBUTING.md) for more details.
-PRs are most welcome !!
