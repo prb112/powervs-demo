@@ -60,7 +60,7 @@ resource "ibm_pi_instance" "bastion" {
   pi_instance_name     = "bastion-0"
   pi_proc_type         = var.processor_type
   pi_image_id          = local.bastion_image_id
-  pi_key_pair_name     = var.public_key #"bastion-keypair-${local.name_prefix}"
+  pi_key_pair_name     = var.public_key_name #"bastion-keypair-${local.name_prefix}"
   pi_sys_type          = var.system_type
   pi_cloud_instance_id = var.service_instance_id
   pi_health_status     = "WARNING"
@@ -155,7 +155,7 @@ echo 'vm.max_map_count = 262144' | sudo tee --append /etc/sysctl.conf > /dev/nul
 # Set SMT to user specified value; Should not fail for invalid values.
 sudo ppc64_cpu --smt=${var.rhel_smt} | true
 
-# turn off rx and set mtu to var.private_network_mtu for all ineterfaces to improve network performance
+# turn off rx and set mtu to var.private_network_mtu for all interfaces to improve network performance
 cidrs=("${ibm_pi_network.public_network.pi_cidr}" "${data.ibm_pi_network.network.cidr}")
 for cidr in "$${cidrs[@]}"; do
   envs=($(ip r | grep "$cidr dev" | awk '{print $3}'))

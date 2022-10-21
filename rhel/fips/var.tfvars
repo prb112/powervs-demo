@@ -18,6 +18,7 @@ rhel_username = "root" #Set it to an appropriate username for non-root user acce
 
 public_key_file                 = "data/id_rsa.pub"
 private_key_file                = "data/id_rsa"
+public_key_name                 = "<none>"
 rhel_subscription_username      = "<subscription-id>"       #Leave this as-is if using CentOS as bastion image
 rhel_subscription_password      = "<subscription-password>" #Leave this as-is if using CentOS as bastion image
 rhel_subscription_org           = ""                        # Define it only when using activationkey for RHEL subscription

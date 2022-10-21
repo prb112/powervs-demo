@@ -184,6 +184,10 @@ variable "private_network_mtu" {
 variable "ansible_repo_name" {
   default = "ansible-2.9-for-rhel-8-ppc64le-rpms"
 }
+
+variable "public_key_name" {
+  default = "<none>"
+}
 ############
 # Local Variables
 locals {
