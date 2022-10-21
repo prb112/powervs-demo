@@ -11,5 +11,4 @@ The purpose of this repository is to provide a set of simple proof-of-concept co
 No. This is only a proof-of-concept that serves as a good starting point to understand how the various features work with PowerVS.
 
 ## Contributing
-Please see the [contributing doc](../../CONTRIBUTING.md) for more details.
-PRs are most welcome !!
+Please see the [contributing doc](CONTRIBUTING.md) for more details.
