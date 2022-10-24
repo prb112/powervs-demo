@@ -24,6 +24,17 @@ provider "ibm" {
   zone             = var.ibmcloud_zone
 }
 
+# Create a random_id label
+resource "random_id" "label" {
+  count = 1
+  byte_length = "2" # Since we use the hex, the word lenght would double
+}
+
+locals {
+  # Generates resource prefix as combination of (random_id) + (resource_name)
+  name_prefix = random_id.label[0].hex
+}
+
 data "ibm_pi_catalog_images" "catalog_images" {
   pi_cloud_instance_id = var.service_instance_id
 }
@@ -40,7 +51,7 @@ data "ibm_pi_image" "bastion" {
 }
 
 resource "ibm_pi_network" "public_network" {
-  pi_network_name      = "bastion-pub-net"
+  pi_network_name      = "${local.name_prefix}-bastion-pub-net"
   pi_cloud_instance_id = var.service_instance_id
   pi_network_type      = "pub-vlan"
   pi_dns               = [for dns in split(";", var.dns_forwarders) : trimspace(dns)]
@@ -52,15 +63,15 @@ locals {
   bastion_storage_pool  = length(local.catalog_bastion_image) == 0 ? data.ibm_pi_image.bastion[0].storage_pool : local.catalog_bastion_image[0].storage_pool
 }
 
-resource "ibm_pi_instance" "bastion" {
+resource "ibm_pi_instance" "bastion_inst" {
   count = 1
 
   pi_memory            = var.bastion["memory"]
   pi_processors        = var.bastion["processors"]
-  pi_instance_name     = "bastion-0"
+  pi_instance_name     = "${local.name_prefix}-bastion"
   pi_proc_type         = var.processor_type
   pi_image_id          = local.bastion_image_id
-  pi_key_pair_name     = var.public_key_name #"bastion-keypair-${local.name_prefix}"
+  pi_key_pair_name     = var.public_key_name
   pi_sys_type          = var.system_type
   pi_cloud_instance_id = var.service_instance_id
   pi_health_status     = "WARNING"
@@ -74,45 +85,20 @@ resource "ibm_pi_instance" "bastion" {
   }
 }
 
-resource "ibm_pi_network_port" "bastion_vip" {
-  count      = 1
-  depends_on = [ibm_pi_instance.bastion]
-
-  pi_network_name      = data.ibm_pi_network.network.pi_network_name
-  pi_cloud_instance_id = var.service_instance_id
-}
-
-#resource "ibm_pi_network_port_attach" "bastion_vip" {
-#  count      = 1
-#  depends_on = [ibm_pi_instance.bastion]
-#
-#  pi_network_name      = data.ibm_pi_network.network.pi_network_name
-#  pi_cloud_instance_id = var.service_instance_id
-#  pi_instance_id = ibm_pi_instance.bastion[count.index].id
-#}
-
-resource "ibm_pi_network_port" "bastion_internal_vip" {
-  count      = 1
-  depends_on = [ibm_pi_instance.bastion]
-
-  pi_network_name      = ibm_pi_network.public_network.pi_network_name
-  pi_cloud_instance_id = var.service_instance_id
-}
-
 data "ibm_pi_instance_ip" "bastion_ip" {
   count      = 1
-  depends_on = [ibm_pi_instance.bastion]
+  depends_on = [ibm_pi_instance.bastion_inst]
 
-  pi_instance_name     = ibm_pi_instance.bastion[count.index].pi_instance_name
+  pi_instance_name     = ibm_pi_instance.bastion_inst[count.index].pi_instance_name
   pi_network_name      = data.ibm_pi_network.network.pi_network_name
   pi_cloud_instance_id = var.service_instance_id
 }
 
 data "ibm_pi_instance_ip" "bastion_public_ip" {
   count      = 1
-  depends_on = [ibm_pi_instance.bastion]
+  depends_on = [ibm_pi_instance.bastion_inst]
 
-  pi_instance_name     = ibm_pi_instance.bastion[count.index].pi_instance_name
+  pi_instance_name     = ibm_pi_instance.bastion_inst[count.index].pi_instance_name
   pi_network_name      = ibm_pi_network.public_network.pi_network_name
   pi_cloud_instance_id = var.service_instance_id
 }
@@ -124,7 +110,7 @@ resource "null_resource" "bastion_init" {
     type        = "ssh"
     user        = var.rhel_username
     host        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
-    private_key = var.private_key
+    private_key = local.private_key
     agent       = var.ssh_agent
     timeout     = "${var.connection_timeout}m"
   }
@@ -183,7 +169,7 @@ resource "null_resource" "bastion_register" {
   triggers   = {
     external_ip        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
     rhel_username      = var.rhel_username
-    private_key        = var.private_key
+    private_key        = local.private_key
     ssh_agent          = var.ssh_agent
     connection_timeout = var.connection_timeout
   }
@@ -246,7 +232,7 @@ resource "null_resource" "enable_repos" {
     type        = "ssh"
     user        = var.rhel_username
     host        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
-    private_key = var.private_key
+    private_key = local.private_key
     agent       = var.ssh_agent
     timeout     = "${var.connection_timeout}m"
   }
@@ -281,7 +267,7 @@ resource "null_resource" "bastion_packages" {
     type        = "ssh"
     user        = var.rhel_username
     host        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
-    private_key = var.private_key
+    private_key = local.private_key
     agent       = var.ssh_agent
     timeout     = "${var.connection_timeout}m"
   }
@@ -320,7 +306,7 @@ resource "null_resource" "rhel83_fix" {
     type        = "ssh"
     user        = var.rhel_username
     host        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
-    private_key = var.private_key
+    private_key = local.private_key
     agent       = var.ssh_agent
     timeout     = "${var.connection_timeout}m"
   }
@@ -331,14 +317,15 @@ resource "null_resource" "rhel83_fix" {
   }
 }
 
-# Reboot to flip the switch for FIPS
+# Reboot the instance
 resource "ibm_pi_instance_action" "fips_bastion_reboot" {
   depends_on = [
     null_resource.rhel83_fix
   ]
   count = 1
+  pi_cloud_instance_id  = var.service_instance_id
 
-  pi_cloud_instance_id = var.service_instance_id
-  pi_instance_id       = ibm_pi_instance.bastion[count.index].id
-  pi_action            = "soft-reboot"
+  # Example: 99999-AA-5554-333-0e1248fa30c6/10111-b114-4d11-b2224-59999ab
+  pi_instance_id        = split("/", ibm_pi_instance.bastion_inst[count.index].id)[1]
+  pi_action             = "soft-reboot"
 }

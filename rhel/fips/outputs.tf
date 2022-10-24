@@ -18,15 +18,6 @@
 #
 ################################################################
 
-output "bastion_private_vip" {
-  value = ibm_pi_network_port.bastion_internal_vip[0].pi_network_port_ipaddress
-}
-#ibm_pi_network_port.bastion_vip[0].pi_network_port_ipaddress
-
-output "bastion_external_vip" {
-  value = ibm_pi_network_port.bastion_internal_vip[0].public_ip
-}
-
 output "bastion_private_ip" {
   value = join(", ", data.ibm_pi_instance_ip.bastion_ip.*.ip)
 }
