@@ -47,7 +47,7 @@ variable "ibmcloud_zone" {
 ################################################################
 # Configure the Instance details
 ################################################################
-variable "bastion" {
+variable "quay" {
   type    = object({ count = number, memory = string, processors = string })
   default = {
     count      = 1
@@ -55,14 +55,14 @@ variable "bastion" {
     processors = "1"
   }
   validation {
-    condition     = lookup(var.bastion, "count", 1) >= 1 && lookup(var.bastion, "count", 1) <= 2
-    error_message = "The bastion.count value must be either 1 or 2."
+    condition     = lookup(var.quay, "count", 1) >= 1 && lookup(var.quay, "count", 1) <= 2
+    error_message = "The quay.count value must be either 1 or 2."
   }
 }
 
 variable "rhel_image_name" {
   type        = string
-  description = "Name of the RHEL image that you want to use for the bastion node"
+  description = "Name of the RHEL image that you want to use for the quay node"
   default     = "rhel-8.3"
 }
 
@@ -143,7 +143,7 @@ variable "rhel_subscription_activationkey" {
 }
 variable "rhel_smt" {
   type        = number
-  description = "SMT value to set on the bastion node. Eg: on,off,2,4,8"
+  description = "SMT value to set on the quay node. Eg: on,off,2,4,8"
   default     = 4
 }
 
@@ -183,6 +183,10 @@ variable "private_network_mtu" {
 
 variable "ansible_repo_name" {
   default = "ansible-2.9-for-rhel-8-ppc64le-rpms"
+}
+
+variable "public_key_name" {
+  default = "<none>"
 }
 ############
 # Local Variables

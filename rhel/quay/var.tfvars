@@ -5,7 +5,7 @@ ibmcloud_zone       = "<zone>"
 service_instance_id = "<cloud_instance_ID>"
 
 # Machine Details
-bastion = { memory = "16", processors = "1", "count" = 1 }
+quay = { memory = "16", processors = "1", "count" = 1 }
 
 rhel_image_name = "rhel-8.3"
 
@@ -25,6 +25,3 @@ rhel_subscription_activationkey = ""                        # Define it only whe
 rhel_smt                        = 4
 
 connection_timeout = 30     # minutes
-
-# RHEL Configuration
-fips_compliant = false   # Set it true if you prefer to use FIPS enable in ocp deployment
