@@ -64,11 +64,11 @@ locals {
 }
 
 resource "ibm_pi_instance" "bastion_inst" {
-  count = 1
+  count = var.bastion.count
 
   pi_memory            = var.bastion["memory"]
   pi_processors        = var.bastion["processors"]
-  pi_instance_name     = "${local.name_prefix}-bastion"
+  pi_instance_name     = "${local.name_prefix}-bastion-${count.index}"
   pi_proc_type         = var.processor_type
   pi_image_id          = local.bastion_image_id
   pi_key_pair_name     = var.public_key_name
@@ -86,7 +86,7 @@ resource "ibm_pi_instance" "bastion_inst" {
 }
 
 data "ibm_pi_instance_ip" "bastion_ip" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [ibm_pi_instance.bastion_inst]
 
   pi_instance_name     = ibm_pi_instance.bastion_inst[count.index].pi_instance_name
@@ -95,7 +95,7 @@ data "ibm_pi_instance_ip" "bastion_ip" {
 }
 
 data "ibm_pi_instance_ip" "bastion_public_ip" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [ibm_pi_instance.bastion_inst]
 
   pi_instance_name     = ibm_pi_instance.bastion_inst[count.index].pi_instance_name
@@ -104,7 +104,7 @@ data "ibm_pi_instance_ip" "bastion_public_ip" {
 }
 
 resource "null_resource" "bastion_init" {
-  count = 1
+  count = var.bastion.count
 
   connection {
     type        = "ssh"
@@ -164,7 +164,7 @@ EOF
 }
 
 resource "null_resource" "bastion_register" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [null_resource.bastion_init]
   triggers   = {
     external_ip        = data.ibm_pi_instance_ip.bastion_public_ip[count.index].external_ip
@@ -225,7 +225,7 @@ EOF
 }
 
 resource "null_resource" "enable_repos" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [null_resource.bastion_init, null_resource.bastion_register]
 
   connection {
@@ -257,7 +257,7 @@ EOF
 }
 
 resource "null_resource" "bastion_packages" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [
     null_resource.bastion_init, null_resource.bastion_register,
     null_resource.enable_repos
@@ -299,7 +299,7 @@ resource "null_resource" "bastion_packages" {
 
 # Remove cloud-init from RHEL8.3
 resource "null_resource" "rhel83_fix" {
-  count      = 1
+  count      = var.bastion.count
   depends_on = [null_resource.bastion_packages]
 
   connection {
@@ -322,7 +322,7 @@ resource "ibm_pi_instance_action" "fips_bastion_reboot" {
   depends_on = [
     null_resource.rhel83_fix
   ]
-  count = 1
+  count = var.bastion.count
   pi_cloud_instance_id  = var.service_instance_id
 
   # Example: 99999-AA-5554-333-0e1248fa30c6/10111-b114-4d11-b2224-59999ab

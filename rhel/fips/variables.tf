@@ -54,10 +54,6 @@ variable "bastion" {
     memory     = "16"
     processors = "1"
   }
-  validation {
-    condition     = lookup(var.bastion, "count", 1) >= 1 && lookup(var.bastion, "count", 1) <= 2
-    error_message = "The bastion.count value must be either 1 or 2."
-  }
 }
 
 variable "rhel_image_name" {

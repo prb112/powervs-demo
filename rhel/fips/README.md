@@ -2,6 +2,8 @@ Demonstrates how to use PowerVS to sets up a RHEL PVM with Terraform and configu
 
 # Steps to Initialize with Terraform and PowerVS
 
+bastion.count can be any size.
+
 0. Create a var.tfvars file
 
 1. Initialize
